@@ -38,8 +38,10 @@ public class ExcelServiceImpl implements IExcelService {
 
     @Override
     public void convertToSqlite(@NotNull InputStream excel, @NotNull File database) {
+        String searchFor = ".";
+        String databaseName = database.getName().substring(0, database.getName().indexOf(searchFor));
+
         ExcelToDatabaseListener listener = new ExcelToDatabaseListener(sqliteDatabaseService);
-        String databaseName = database.getName().substring(0, database.getName().indexOf("."));
         // 数据库文件路径赋值。
         listener.setDatabase(database.getPath());
         // 数据库名赋值。
@@ -51,8 +53,10 @@ public class ExcelServiceImpl implements IExcelService {
 
     @Override
     public void convertToMysql(InputStream excel, @NotNull File database) {
+        String searchFor = ".";
+        String databaseName = database.getName().substring(0, database.getName().indexOf(searchFor));
+
         ExcelToDatabaseListener listener = new ExcelToDatabaseListener(mysqlDatabaseService);
-        String databaseName = database.getName().substring(0, database.getName().indexOf("."));
         // 数据库名赋值。
         listener.setDatabase(databaseName);
         // 数据库名赋值。

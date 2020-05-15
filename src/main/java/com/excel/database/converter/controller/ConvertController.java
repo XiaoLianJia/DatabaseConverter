@@ -49,8 +49,9 @@ public class ConvertController {
             return null;
         }
 
-        if (-1 != fileName.lastIndexOf(".")) {
-            fileName = fileName.substring(0, fileName.lastIndexOf("."));
+        String searchFor = ".";
+        if (-1 != fileName.lastIndexOf(searchFor)) {
+            fileName = fileName.substring(0, fileName.lastIndexOf(searchFor));
         }
         fileName = String.format("SQlite%s.sqlite", fileName);
         File database = new File(System.getProperty("user.dir") + File.separator + fileName);
@@ -75,8 +76,9 @@ public class ConvertController {
             return null;
         }
 
-        if (-1 != fileName.lastIndexOf(".")) {
-            fileName = fileName.substring(0, fileName.lastIndexOf("."));
+        String searchFor = ".";
+        if (-1 != fileName.lastIndexOf(searchFor)) {
+            fileName = fileName.substring(0, fileName.lastIndexOf(searchFor));
         }
         fileName = String.format("MySQL%s.sql", fileName);
         File database = new File(System.getProperty("user.dir") + File.separator + fileName);
