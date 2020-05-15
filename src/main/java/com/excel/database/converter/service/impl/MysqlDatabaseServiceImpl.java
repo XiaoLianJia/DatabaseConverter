@@ -1,11 +1,16 @@
 package com.excel.database.converter.service.impl;
 
+import com.excel.database.converter.service.IDatabaseExportService;
 import com.excel.database.converter.service.IDatabaseService;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.*;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +24,7 @@ import java.util.Map;
  */
 @Slf4j
 @Service("Mysql")
-public class MysqlDatabaseServiceImpl implements IDatabaseService {
+public class MysqlDatabaseServiceImpl implements IDatabaseService, IDatabaseExportService {
 
     @Value("${datasource.mysql.jdbc-url}")
     private String jdbcUrl;
@@ -143,5 +148,287 @@ public class MysqlDatabaseServiceImpl implements IDatabaseService {
             }
         }
         return true;
+    }
+
+    @Override
+    public boolean exportDatabaseStructure(String databaseUrl, String databaseName, String sqlFilePath) throws Exception {
+        return false;
+    }
+
+    @Override
+    public boolean exportDatabaseStructureAndData(String databaseUrl, String databaseName, String sqlFilePath) throws Exception {
+        try (Connection connection = DriverManager.getConnection(databaseUrl, username, password);
+             BufferedWriter writer = new BufferedWriter(new FileWriter(sqlFilePath))) {
+            // 写入文件头。
+            writeExportFileHead(writer);
+
+            try (Statement statement = connection.createStatement();
+                 ResultSet resultSet = statement.executeQuery(String.format("SHOW FULL TABLES FROM `%s` WHERE TABLE_TYPE = 'BASE TABLE'", databaseName))) {
+                while (resultSet.next()) {
+                    String tableName = resultSet.getString(1);
+                    exportTableStruct(connection, writer, tableName);
+                    exportTableData(connection, writer, tableName);
+                }
+            }
+
+            try (Statement statement = connection.createStatement();
+                 ResultSet resultSet = statement.executeQuery(
+                         String.format("SELECT `SPECIFIC_NAME` from `INFORMATION_SCHEMA`.`ROUTINES` WHERE `ROUTINE_SCHEMA` = '%s' AND ROUTINE_TYPE = 'PROCEDURE'; ", databaseName))) {
+                while (resultSet.next()) {
+                    String processName = resultSet.getString(1);
+
+                    try (Statement statement1 = connection.createStatement();
+                         ResultSet resultSet1 = statement1.executeQuery(String.format("SHOW CREATE PROCEDURE `%s`", processName))) {
+                        if (! resultSet1.next()) {
+                            continue;
+                        }
+
+                        writer.newLine();
+                        writer.newLine();
+                        writer.write(String.format("/* Procedure structure for procedure `%s` */", processName));
+                        writer.newLine();
+                        writer.write(String.format("/*!50003 DROP PROCEDURE IF EXISTS  `%s` */;", processName));
+                        writer.newLine();
+                        writer.write("DELIMITER $$");
+                        writer.newLine();
+                        writer.append("/*!50003 ").append(resultSet1.getString(3)).append(" */$$");
+                        writer.newLine();
+                        writer.write("DELIMITER ;");
+                    }
+                }
+            }
+
+            writeExportFileTail(writer);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean exportTableStructure(String databaseUrl, String tableName, String sqlFilePath) throws Exception {
+        return false;
+    }
+
+    @Override
+    public boolean exportTableStructureAndData(String databaseUrl, String tableName, String sqlFilePath) throws Exception {
+        return false;
+    }
+
+    private void exportTableStruct(Connection connection, BufferedWriter writer, String tableName) throws Exception {
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(String.format("SHOW CREATE TABLE `%s`", tableName))) {
+            if (!resultSet.next()) {
+                return;
+            }
+
+            writer.newLine();
+            writer.newLine();
+            writer.write("-- ----------------------------");
+            writer.newLine();
+            writer.write(String.format("-- Table structure for `%s`", tableName));
+            writer.newLine();
+            writer.write("-- ----------------------------");
+            writer.newLine();
+            writer.write(String.format("DROP TABLE IF EXISTS `%s`;", tableName));
+            writer.newLine();
+            writer.write(resultSet.getString(2) + ";");
+            writer.newLine();
+            writer.flush();
+        }
+    }
+
+    private void exportTableData(Connection connection, BufferedWriter writer, String tableName) throws Exception {
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(String.format("SELECT COUNT(1) FROM `%s`", tableName))) {
+            int rowCount = resultSet.next() ? resultSet.getInt(1) : 0;
+            if (0 >= rowCount) {
+                return ;
+            }
+
+            writer.write("-- ----------------------------");
+            writer.newLine();
+            writer.write(String.format("-- Data for the table `%s`", tableName));
+            writer.newLine();
+            writer.write("-- ----------------------------");
+            writer.newLine();
+        }
+
+        try (Statement statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
+            statement.setFetchSize(Integer.MIN_VALUE);
+            statement.setFetchDirection(ResultSet.FETCH_REVERSE);
+            try (ResultSet resultSet = statement.executeQuery(String.format("SELECT * FROM `%s`", tableName))) {
+                while (resultSet.next()) {
+                    int colCount = resultSet.getMetaData().getColumnCount();
+                    writer.write(String.format("INSERT INTO `%s` VALUES (", tableName));
+
+                    for (int j = 0; j < colCount; j ++) {
+                        if (j > 0) {
+                            writer.write(',');
+                        }
+                        Object colValue = resultSet.getObject(j + 1);
+                        if(null != colValue) {
+                            writer.write(String.format("'%s'", escapeString(colValue.toString())));
+                        } else {
+                            writer.write("NULL");
+                        }
+                    }
+                    writer.write(");");
+                    writer.newLine();
+                    writer.flush();
+                }
+            }
+        }
+    }
+
+    private void writeExportFileHead(@NotNull BufferedWriter writer) throws IOException {
+        writer.write("/*");
+        writer.newLine();
+        writer.write("!40101 SET NAMES utf8;");
+        writer.newLine();
+        writer.write("!40101 SET SQL_MODE='';");
+        writer.newLine();
+        writer.write("!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;");
+        writer.newLine();
+        writer.write("!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;");
+        writer.newLine();
+        writer.write("!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO';");
+        writer.newLine();
+        writer.write("!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0;");
+        writer.newLine();
+        writer.write("*/");
+        writer.newLine();
+        writer.flush();
+    }
+
+    private void writeExportFileTail(@NotNull BufferedWriter writer) throws IOException {
+        writer.newLine();
+        writer.newLine();
+        writer.write("/*");
+        writer.newLine();
+        writer.write("!40101 SET SQL_MODE=@OLD_SQL_MODE;");
+        writer.newLine();
+        writer.write("!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;");
+        writer.newLine();
+        writer.write("!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;");
+        writer.newLine();
+        writer.write("!40111 SET SQL_NOTES=@OLD_SQL_NOTES;");
+        writer.newLine();
+        writer.write("*/");
+        writer.newLine();
+        writer.flush();
+    }
+
+
+    public static String escapeString(String x) {
+        if(StringUtils.isEmpty(x)) {
+            return x;
+        }
+        if(!isNeedEscape(x)) {
+            return x;
+        }
+        int stringLength = x.length();
+        String parameterAsString = x;
+        StringBuffer buf = new StringBuffer((int)((double)x.length() * 1.1000000000000001D));
+        // 可以指定结果前后追加单引号：'
+        //buf.append('\'');
+        for(int i = 0; i < stringLength; i++)
+        {
+            char c = x.charAt(i);
+            switch(c)
+            {
+                default:
+                    break;
+
+                case 0: // '\0'
+                    buf.append('\\');
+                    buf.append('0');
+                    continue;
+
+                case 10: // '\n'
+                    buf.append('\\');
+                    buf.append('n');
+                    continue;
+
+                case 13: // '\r'
+                    buf.append('\\');
+                    buf.append('r');
+                    continue;
+
+                case 92: // '\\'
+                    buf.append('\\');
+                    buf.append('\\');
+                    continue;
+
+                case 39: // '\''
+                    buf.append('\\');
+                    buf.append('\'');
+                    continue;
+
+                case 34: // '"'
+                    buf.append('\\');
+                    buf.append('"');
+                    continue;
+
+                case 26: // '\032'
+                    buf.append('\\');
+                    buf.append('Z');
+                    continue;
+
+            }
+            buf.append(c);
+        }
+        // 可以指定结果前后追加单引号：'
+        //buf.append('\'');
+        parameterAsString = buf.toString();
+        return parameterAsString;
+    }
+
+    public static boolean isNeedEscape(String x) {
+        boolean needsHexEscape = false;
+        if(StringUtils.isEmpty(x)) {
+            return needsHexEscape;
+        }
+        int stringLength = x.length();
+        int i = 0;
+        do
+        {
+            if(i >= stringLength) {
+                break;
+            }
+            char c = x.charAt(i);
+            switch(c)
+            {
+                case 0: // '\0'
+                    needsHexEscape = true;
+                    break;
+
+                case 10: // '\n'
+                    needsHexEscape = true;
+                    break;
+
+                case 13: // '\r'
+                    needsHexEscape = true;
+                    break;
+
+                case 92: // '\\'
+                    needsHexEscape = true;
+                    break;
+
+                case 39: // '\''
+                    needsHexEscape = true;
+                    break;
+
+                case 34: // '"'
+                    needsHexEscape = true;
+                    break;
+
+                case 26: // '\032'
+                    needsHexEscape = true;
+                    break;
+            }
+            if(needsHexEscape)
+                break;
+            i++;
+        } while(true);
+        return needsHexEscape;
     }
 }
