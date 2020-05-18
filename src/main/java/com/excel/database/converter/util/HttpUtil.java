@@ -58,7 +58,9 @@ public class HttpUtil {
 		try (CloseableHttpClient closeableHttpClient = HttpClients.createDefault();
 			 CloseableHttpResponse closeableHttpResponse = closeableHttpClient.execute(httpGet)) {
 			HttpEntity httpEntity = closeableHttpResponse.getEntity();
-			return EntityUtils.toString(httpEntity, StandardCharsets.UTF_8);
+			String result = EntityUtils.toString(httpEntity, StandardCharsets.UTF_8);
+			EntityUtils.consume(httpEntity);
+			return result;
 		}
 	}
 
@@ -85,8 +87,7 @@ public class HttpUtil {
 
 		try (CloseableHttpClient closeableHttpClient = HttpClients.createDefault();
 			 CloseableHttpResponse closeableHttpResponse = closeableHttpClient.execute(httpPost)) {
-			HttpEntity httpEntity = closeableHttpResponse.getEntity();
-			return EntityUtils.toString(httpEntity, StandardCharsets.UTF_8);
+			return EntityUtils.toString(closeableHttpResponse.getEntity(), StandardCharsets.UTF_8);
 		}
 	}
 
@@ -100,8 +101,7 @@ public class HttpUtil {
 
 		try (CloseableHttpClient closeableHttpClient = HttpClients.createDefault();
 			 CloseableHttpResponse closeableHttpResponse = closeableHttpClient.execute(httpPost)) {
-			HttpEntity httpEntity = closeableHttpResponse.getEntity();
-			return EntityUtils.toString(httpEntity, StandardCharsets.UTF_8);
+			return EntityUtils.toString(closeableHttpResponse.getEntity(), StandardCharsets.UTF_8);
 		}
 	}
 
@@ -128,11 +128,7 @@ public class HttpUtil {
 			 CloseableHttpResponse closeableHttpResponse = closeableHttpClient.execute(httpPost)) {
 			Map<String, Object> result = new HashMap<>(2);
 			result.put("statusCode", closeableHttpResponse.getStatusLine().getStatusCode());
-			HttpEntity httpEntity = closeableHttpResponse.getEntity();
-			if (null != httpEntity) {
-				result.put("data", EntityUtils.toString(httpEntity, StandardCharsets.UTF_8));
-			}
-			EntityUtils.consume(httpEntity);
+			result.put("data", EntityUtils.toString(closeableHttpResponse.getEntity(), StandardCharsets.UTF_8));
 			return result;
 		}
 	}
