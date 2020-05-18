@@ -39,11 +39,10 @@ public class MysqlDatabaseServiceImpl implements IDatabaseService, IDatabaseExpo
     private String driverClassName;
 
     @Override
-    public String createDatabase(String databaseName) throws SQLException, ClassNotFoundException {
+    public String createDatabase(String databaseName) throws SQLException {
         String url = jdbcUrl.substring(0, jdbcUrl.lastIndexOf("/") + 1) + databaseName + jdbcUrl.substring(jdbcUrl.indexOf("?"));
         log.info("创建数据库：{}。", url);
 
-        Class.forName(driverClassName);
         try (Connection connection = DriverManager.getConnection(jdbcUrl, username, password);
              Statement statement = connection.createStatement()) {
             statement.executeUpdate(String.format("CREATE DATABASE IF NOT EXISTS %s", databaseName));
@@ -51,6 +50,16 @@ public class MysqlDatabaseServiceImpl implements IDatabaseService, IDatabaseExpo
             log.info("驱动：{}，版本：{}。", meta.getDriverName(), meta.getDriverVersion());
         }
         return url;
+    }
+
+    @Override
+    public boolean dropDatabase(String databaseUrl, String databaseName) throws Exception {
+        try (Connection connection = DriverManager.getConnection(jdbcUrl, username, password);
+             Statement statement = connection.createStatement()) {
+            statement.executeUpdate(String.format("DROP DATABASE IF EXISTS %s", databaseName));
+            log.info("删除数据库：{}。", databaseName);
+        }
+        return true;
     }
 
     @Override

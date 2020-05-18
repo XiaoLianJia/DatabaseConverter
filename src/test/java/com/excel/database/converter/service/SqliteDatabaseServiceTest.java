@@ -33,29 +33,17 @@ public class SqliteDatabaseServiceTest {
     private String tableName = "tableTest";
 
     @Test
-    public void createDatabase() throws Exception {
-        File file = new File(databaseFolder + databaseName);
-        if (! file.exists()
-                && ! file.createNewFile()) {
-            System.out.println("数据库文件不存在，且创建新文件失败。");
-            return;
-        }
-
-        String databaseUrl = databaseService.createDatabase(file.getPath());
+    public void createAndDropDatabase() throws Exception {
+        String databaseUrl = databaseService.createDatabase(databaseFolder + databaseName);
         System.out.println(databaseUrl);
-        file.deleteOnExit();
+
+        boolean result = databaseService.dropDatabase(databaseUrl, databaseName);
+        System.out.println(String.format("删除数据库%s。", result ? "成功" : "失败"));
     }
 
     @Test
-    public void crateTable() throws Exception {
-        File file = new File(databaseFolder + databaseName);
-        if (! file.exists()
-                && ! file.createNewFile()) {
-            System.out.println("数据库文件不存在，且创建新文件失败。");
-            return;
-        }
-
-        String databaseUrl = databaseService.createDatabase(file.getPath());
+    public void crateAndDropTable() throws Exception {
+        String databaseUrl = databaseService.createDatabase(databaseFolder + databaseName);
         System.out.println(databaseUrl);
 
         Map<Integer, String> fields = new HashMap<>();
@@ -65,20 +53,17 @@ public class SqliteDatabaseServiceTest {
 
         boolean result = databaseService.crateTable(databaseUrl, tableName, fields);
         System.out.println(String.format("创建数据表%s。", result ? "成功" : "失败"));
-        file.deleteOnExit();
+        
+        result = databaseService.dropTable(databaseUrl, tableName);
+        System.out.println(String.format("删除数据表%s。", result ? "成功" : "失败"));
+
+        result = databaseService.dropDatabase(databaseUrl, databaseName);
+        System.out.println(String.format("删除数据库%s。", result ? "成功" : "失败"));
     }
 
     @Test
     public void insert() throws Exception {
-        String databaseName = "sqliteTest.db";
-        File file = new File(databaseFolder + databaseName);
-        if (! file.exists()
-                && ! file.createNewFile()) {
-            System.out.println("数据库文件不存在，且创建新文件失败。");
-            return;
-        }
-
-        String databaseUrl = databaseService.createDatabase(file.getPath());
+        String databaseUrl = databaseService.createDatabase(databaseFolder + databaseName);
         System.out.println(databaseUrl);
 
         Map<Integer, String> fields = new HashMap<>(4);
@@ -94,7 +79,14 @@ public class SqliteDatabaseServiceTest {
 
             boolean result = databaseService.insert(databaseUrl, tableName, fields, data);
             System.out.println(String.format("插入数据表%s。", result ? "成功" : "失败"));
+
+            if (result) {
+                result = databaseService.dropTable(databaseUrl, tableName);
+                System.out.println(String.format("删除数据表%s。", result ? "成功" : "失败"));
+
+                result = databaseService.dropDatabase(databaseUrl, databaseName);
+                System.out.println(String.format("删除数据库%s。", result ? "成功" : "失败"));
+            }
         }
-        file.deleteOnExit();
     }
 }

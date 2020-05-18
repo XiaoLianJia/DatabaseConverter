@@ -21,6 +21,15 @@ public interface IDatabaseService {
     String createDatabase(String database) throws Exception;
 
     /**
+     * 删除库
+     * @param databaseUrl 数据库URL
+     * @param databaseName 库名
+     * @return 是否删除成功
+     * @throws Exception 异常
+     */
+    boolean dropDatabase(String databaseUrl, String databaseName) throws Exception;
+
+    /**
      * 创建表
      * @param databaseUrl 数据库URL
      * @param tableName 表名

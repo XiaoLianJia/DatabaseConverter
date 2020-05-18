@@ -39,9 +39,12 @@ public class MysqlDatabaseServiceTest {
     private String tableName2 = "tableTest2";
 
     @Test
-    public void crateDatabase() throws Exception {
+    public void createAndDropDatabase() throws Exception {
         String databaseUrl = databaseService.createDatabase(databaseName);
         System.out.println(databaseUrl);
+
+        boolean result = databaseService.dropDatabase(databaseUrl, databaseName);
+        System.out.println(String.format("删除数据库%s。", result ? "成功" : "失败"));
     }
 
     @Test
@@ -83,6 +86,9 @@ public class MysqlDatabaseServiceTest {
             if (result) {
                 result = databaseService.dropTable(databaseUrl, tableName);
                 System.out.println(String.format("删除数据表%s。", result ? "成功" : "失败"));
+
+                result = databaseService.dropDatabase(databaseUrl, databaseName);
+                System.out.println(String.format("删除数据库%s。", result ? "成功" : "失败"));
             }
         }
     }
@@ -115,6 +121,9 @@ public class MysqlDatabaseServiceTest {
                 result = databaseService.dropTable(databaseUrl, tableName)
                         && databaseService.dropTable(databaseUrl, tableName2);
                 System.out.println(String.format("删除数据表%s。", result ? "成功" : "失败"));
+
+                result = databaseService.dropDatabase(databaseUrl, databaseName);
+                System.out.println(String.format("删除数据库%s。", result ? "成功" : "失败"));
             }
         }
     }
@@ -147,6 +156,9 @@ public class MysqlDatabaseServiceTest {
                 result = databaseService.dropTable(databaseUrl, tableName)
                         && databaseService.dropTable(databaseUrl, tableName2);
                 System.out.println(String.format("删除数据表%s。", result ? "成功" : "失败"));
+
+                result = databaseService.dropDatabase(databaseUrl, databaseName);
+                System.out.println(String.format("删除数据库%s。", result ? "成功" : "失败"));
             }
         }
     }
@@ -179,6 +191,9 @@ public class MysqlDatabaseServiceTest {
                 result = databaseService.dropTable(databaseUrl, tableName)
                         && databaseService.dropTable(databaseUrl, tableName2);
                 System.out.println(String.format("删除数据表%s。", result ? "成功" : "失败"));
+
+                result = databaseService.dropDatabase(databaseUrl, databaseName);
+                System.out.println(String.format("删除数据库%s。", result ? "成功" : "失败"));
             }
         }
     }
@@ -211,6 +226,9 @@ public class MysqlDatabaseServiceTest {
                 result = databaseService.dropTable(databaseUrl, tableName)
                         && databaseService.dropTable(databaseUrl, tableName2);
                 System.out.println(String.format("删除数据表%s。", result ? "成功" : "失败"));
+
+                result = databaseService.dropDatabase(databaseUrl, databaseName);
+                System.out.println(String.format("删除数据库%s。", result ? "成功" : "失败"));
             }
         }
     }

@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.*;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +23,14 @@ import java.util.Map;
 public class SqliteDatabaseServiceImpl implements IDatabaseService {
 
     @Override
-    public String createDatabase(String databasePath) throws SQLException {
+    public String createDatabase(String databasePath) throws SQLException, IOException {
+        File file = new File(databasePath);
+        if (! file.exists()
+                && ! file.createNewFile()) {
+            System.out.println("数据库文件不存在，且创建新文件失败。");
+            return null;
+        }
+
         String url = "jdbc:sqlite:" + databasePath;
         log.info("创建数据库：{}。", url);
         try (Connection connection = DriverManager.getConnection(url)) {
@@ -29,6 +38,14 @@ public class SqliteDatabaseServiceImpl implements IDatabaseService {
             log.info("驱动：{}，版本：{}。", meta.getDriverName(), meta.getDriverVersion());
         }
         return url;
+    }
+
+    @Override
+    public boolean dropDatabase(@NotNull String databaseUrl, String databaseName) {
+        String path = databaseUrl.replace("jdbc:sqlite:", "");
+        log.info("删除数据库{}。", path);
+        File database = new File(path);
+        return database.delete();
     }
 
     @Override
@@ -51,8 +68,16 @@ public class SqliteDatabaseServiceImpl implements IDatabaseService {
     }
 
     @Override
-    public boolean dropTable(String databaseUrl, String tableName) {
-        return false;
+    public boolean dropTable(String databaseUrl, String tableName) throws SQLException {
+        String sql = String.format("DROP TABLE IF EXISTS [main].[%s];", tableName);
+        log.info("删除数据表：{}。", tableName);
+        log.info("SQL：{}。", sql);
+
+        try (Connection connection = DriverManager.getConnection(databaseUrl);
+             Statement statement = connection.createStatement()) {
+            statement.execute(sql);
+        }
+        return true;
     }
 
     @Override
