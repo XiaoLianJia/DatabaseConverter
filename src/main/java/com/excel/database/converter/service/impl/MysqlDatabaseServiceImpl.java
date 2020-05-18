@@ -35,9 +35,6 @@ public class MysqlDatabaseServiceImpl implements IDatabaseService, IDatabaseExpo
     @Value("${datasource.mysql.password}")
     private String password;
 
-    @Value("${datasource.mysql.driver-class-name}")
-    private String driverClassName;
-
     @Override
     public String createDatabase(String databaseName) throws SQLException {
         String url = jdbcUrl.substring(0, jdbcUrl.lastIndexOf("/") + 1) + databaseName + jdbcUrl.substring(jdbcUrl.indexOf("?"));

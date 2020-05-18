@@ -90,10 +90,10 @@ public class ExcelToDatabaseListener extends AnalysisEventListener<Map<Integer, 
             databaseUrl = databaseService.createDatabase(database);
             if (null != databaseUrl
                     && databaseService.crateTable(databaseUrl, tableName, headMap)) {
-                log.info("创建数据库、数据表，库：{}，表：{}。", databaseName, tableName);
+                log.info("创建数据库：{}，数据表：{}。", databaseName, tableName);
             }
         } catch (Exception e) {
-            log.error("创建数据库、数据表失败，库：{}，表：{}。", databaseName, tableName);
+            log.error("创建数据库/表失败，库：{}，表：{}。", databaseName, tableName);
             log.error(e.getMessage());
         }
     }

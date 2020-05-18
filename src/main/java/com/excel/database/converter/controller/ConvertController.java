@@ -89,7 +89,7 @@ public class ConvertController {
         }
 
         excelService.convertToMysql(file.getInputStream(), database);
-        log.info("SQlite：{}。", database.getPath());
+        log.info("MySQL：{}。", database.getPath());
         return export(database);
     }
 

@@ -72,5 +72,7 @@ public class ExcelServiceImpl implements IExcelService {
 
         // 导出SQL文件。
         mysqlDatabaseExportService.exportDatabaseStructureAndData(listener.getDatabaseUrl(), databaseName, database.getPath());
+        // 导出完成后删除数据库。
+        mysqlDatabaseService.dropDatabase(listener.getDatabaseUrl(), databaseName);
     }
 }

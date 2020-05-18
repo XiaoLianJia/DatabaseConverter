@@ -13,4 +13,3 @@ datasource:
         jdbc-url: jdbc:mariadb://118.24.3.84:3306/mysql?useUnicode=true&characterEncoding=utf-8
         username: zhangbin
         password: zhangbin
-        driver-class-name: org.mariadb.jdbc.Driver
