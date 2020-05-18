@@ -50,7 +50,7 @@ public class MysqlDatabaseServiceImpl implements IDatabaseService, IDatabaseExpo
     }
 
     @Override
-    public boolean dropDatabase(String databaseUrl, String databaseName) throws Exception {
+    public boolean dropDatabase(String databaseUrl, String databaseName) throws SQLException {
         try (Connection connection = DriverManager.getConnection(jdbcUrl, username, password);
              Statement statement = connection.createStatement()) {
             statement.executeUpdate(String.format("DROP DATABASE IF EXISTS %s", databaseName));
@@ -157,7 +157,7 @@ public class MysqlDatabaseServiceImpl implements IDatabaseService, IDatabaseExpo
     }
 
     @Override
-    public boolean exportDatabaseStructure(String databaseUrl, String databaseName, String sqlFilePath) throws Exception {
+    public boolean exportDatabaseStructure(String databaseUrl, String databaseName, String sqlFilePath) throws SQLException, IOException {
         try (Connection connection = DriverManager.getConnection(databaseUrl, username, password);
              BufferedWriter writer = new BufferedWriter(new FileWriter(sqlFilePath))) {
             // 写入文件头。
@@ -180,7 +180,7 @@ public class MysqlDatabaseServiceImpl implements IDatabaseService, IDatabaseExpo
     }
 
     @Override
-    public boolean exportDatabaseStructureAndData(String databaseUrl, String databaseName, String sqlFilePath) throws Exception {
+    public boolean exportDatabaseStructureAndData(String databaseUrl, String databaseName, String sqlFilePath) throws SQLException, IOException {
         try (Connection connection = DriverManager.getConnection(databaseUrl, username, password);
              BufferedWriter writer = new BufferedWriter(new FileWriter(sqlFilePath))) {
             // 写入文件头。
@@ -205,7 +205,7 @@ public class MysqlDatabaseServiceImpl implements IDatabaseService, IDatabaseExpo
     }
 
     @Override
-    public boolean exportTableStructure(String databaseUrl, String tableName, String sqlFilePath) throws Exception {
+    public boolean exportTableStructure(String databaseUrl, String tableName, String sqlFilePath) throws SQLException, IOException {
         try (Connection connection = DriverManager.getConnection(databaseUrl, username, password);
              BufferedWriter writer = new BufferedWriter(new FileWriter(sqlFilePath))) {
             // 写入文件头。
@@ -219,7 +219,7 @@ public class MysqlDatabaseServiceImpl implements IDatabaseService, IDatabaseExpo
     }
 
     @Override
-    public boolean exportTableStructureAndData(String databaseUrl, String tableName, String sqlFilePath) throws Exception {
+    public boolean exportTableStructureAndData(String databaseUrl, String tableName, String sqlFilePath) throws SQLException, IOException {
         try (Connection connection = DriverManager.getConnection(databaseUrl, username, password);
              BufferedWriter writer = new BufferedWriter(new FileWriter(sqlFilePath))) {
             // 写入文件头。
@@ -239,9 +239,10 @@ public class MysqlDatabaseServiceImpl implements IDatabaseService, IDatabaseExpo
      * @param connection 连接
      * @param writer 缓存写入器
      * @param tableName 表名
-     * @throws Exception 异常
+     * @throws SQLException 异常
+     * @throws IOException 异常
      */
-    private void exportTableStruct(Connection connection, BufferedWriter writer, String tableName) throws Exception {
+    private void exportTableStruct(Connection connection, BufferedWriter writer, String tableName) throws SQLException, IOException {
         try (Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(String.format("SHOW CREATE TABLE `%s`", tableName))) {
             if (resultSet.next()) {
@@ -267,9 +268,10 @@ public class MysqlDatabaseServiceImpl implements IDatabaseService, IDatabaseExpo
      * @param connection 连接
      * @param writer 缓存写入器
      * @param tableName 表名
-     * @throws Exception 异常
+     * @throws SQLException 异常
+     * @throws IOException 异常
      */
-    private void exportTableData(Connection connection, BufferedWriter writer, String tableName) throws Exception {
+    private void exportTableData(Connection connection, BufferedWriter writer, String tableName) throws SQLException, IOException {
         try (Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(String.format("SELECT COUNT(1) FROM `%s`", tableName))) {
             int rowCount = resultSet.next() ? resultSet.getInt(1) : 0;
@@ -313,9 +315,10 @@ public class MysqlDatabaseServiceImpl implements IDatabaseService, IDatabaseExpo
      * @param connection 连接
      * @param writer 缓存写入器
      * @param databaseName 库名
-     * @throws Exception 异常
+     * @throws SQLException 异常
+     * @throws IOException 异常
      */
-    private void exportRoutines(Connection connection, BufferedWriter writer, String databaseName) throws Exception {
+    private void exportRoutines(Connection connection, BufferedWriter writer, String databaseName) throws SQLException, IOException {
         try (Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(String.format("SELECT `SPECIFIC_NAME` from `INFORMATION_SCHEMA`.`ROUTINES` " +
                      "WHERE `ROUTINE_SCHEMA` = '%s' AND ROUTINE_TYPE = 'PROCEDURE'; ", databaseName))) {
@@ -331,9 +334,10 @@ public class MysqlDatabaseServiceImpl implements IDatabaseService, IDatabaseExpo
      * @param connection 连接
      * @param writer 缓存写入器
      * @param procedureName 存储过程名称
-     * @throws Exception 异常
+     * @throws SQLException 异常
+     * @throws IOException 异常
      */
-    private void exportProcedure(Connection connection, BufferedWriter writer, String procedureName) throws Exception {
+    private void exportProcedure(Connection connection, BufferedWriter writer, String procedureName) throws SQLException, IOException {
         try (Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(String.format("SHOW CREATE PROCEDURE `%s`", procedureName))) {
             if (resultSet.next()) {

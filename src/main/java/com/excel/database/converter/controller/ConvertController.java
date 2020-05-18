@@ -110,7 +110,7 @@ public class ConvertController {
                 .ok()
                 .headers(httpHeaders)
                 .contentLength(file.length())
-                .contentType(MediaType.parseMediaType("multipart/form-data"))
+                .contentType(MediaType.parseMediaType("application/octet-stream"))
                 .body(new FileSystemResource(file));
     }
 }
