@@ -106,15 +106,14 @@ public class HttpUtil {
 	}
 
 	@NotNull
-	public static Map<String, Object> post(String url, @NotNull File file, @NotNull Map<String, Object> parameters) throws IOException {
+	public static String post(String url, @NotNull File file, @NotNull List<NameValuePair> form) throws IOException {
 		MultipartEntityBuilder builder = MultipartEntityBuilder.create()
 				.setCharset(StandardCharsets.UTF_8)
 				.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-		builder.addPart(file.getName(), new FileBody(file));
+		builder.addPart("file", new FileBody(file, ContentType.DEFAULT_BINARY));
 
-		for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-			builder.addPart(entry.getKey(),
-					new StringBody((String) entry.getValue(), ContentType.create("text/plain", Consts.UTF_8)));
+		for (NameValuePair pair : form) {
+			builder.addPart(pair.getName(), new StringBody(pair.getValue(), ContentType.create("text/plain", Consts.UTF_8)));
 		}
 
 		HttpPost httpPost = new HttpPost(url);
@@ -126,10 +125,7 @@ public class HttpUtil {
 
 		try (CloseableHttpClient closeableHttpClient = HttpClients.createDefault();
 			 CloseableHttpResponse closeableHttpResponse = closeableHttpClient.execute(httpPost)) {
-			Map<String, Object> result = new HashMap<>(2);
-			result.put("statusCode", closeableHttpResponse.getStatusLine().getStatusCode());
-			result.put("data", EntityUtils.toString(closeableHttpResponse.getEntity(), StandardCharsets.UTF_8));
-			return result;
+			return EntityUtils.toString(closeableHttpResponse.getEntity(), StandardCharsets.UTF_8);
 		}
 	}
 }
