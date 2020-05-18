@@ -20,9 +20,9 @@ import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -106,6 +106,11 @@ public class HttpUtil {
 	}
 
 	@NotNull
+	public static String post(String url, @NotNull File file) throws IOException {
+		return post(url, file, new ArrayList<>());
+	}
+
+	@NotNull
 	public static String post(String url, @NotNull File file, @NotNull List<NameValuePair> form) throws IOException {
 		MultipartEntityBuilder builder = MultipartEntityBuilder.create()
 				.setCharset(StandardCharsets.UTF_8)
@@ -128,4 +133,34 @@ public class HttpUtil {
 			return EntityUtils.toString(closeableHttpResponse.getEntity(), StandardCharsets.UTF_8);
 		}
 	}
+
+	public static boolean post(String url, @NotNull File fileUpload, File fileDownload) throws IOException {
+		MultipartEntityBuilder builder = MultipartEntityBuilder.create()
+				.setCharset(StandardCharsets.UTF_8)
+				.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+		builder.addPart("file", new FileBody(fileUpload, ContentType.DEFAULT_BINARY));
+
+		HttpPost httpPost = new HttpPost(url);
+		httpPost.setEntity(builder.build());
+		httpPost.setConfig(RequestConfig.custom()
+				.setConnectTimeout(1000 * CONNECT_TIMEOUT)
+				.setSocketTimeout(1000 * SOCKET_TIMEOUT)
+				.build());
+
+		try (CloseableHttpClient closeableHttpClient = HttpClients.createDefault();
+			 CloseableHttpResponse closeableHttpResponse = closeableHttpClient.execute(httpPost);
+			 InputStream inputStream = closeableHttpResponse.getEntity().getContent();
+			 OutputStream outputStream = new FileOutputStream(fileDownload)) {
+			byte[] buffer = new byte[4096];
+			int read;
+			while ((read = inputStream.read(buffer)) > 0) {
+				byte[] bytes = new byte[read];
+				System.arraycopy(buffer, 0, bytes, 0, read);
+				outputStream.write(bytes);
+			}
+			outputStream.flush();
+			return true;
+		}
+	}
+
 }
