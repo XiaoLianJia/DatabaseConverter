@@ -29,6 +29,7 @@ public interface IExcelService {
      * Excel转储到MySQL
      * @param excel Excel
      * @param database MySQL
+     * @throws Exception 异常
      */
     void convertToMysql(InputStream excel, File database) throws Exception;
 }
