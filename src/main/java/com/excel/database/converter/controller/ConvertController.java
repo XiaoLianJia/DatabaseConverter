@@ -102,7 +102,7 @@ public class ConvertController {
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Cache-Control", "no-cache, no-store, must-revalidate");
-        httpHeaders.add("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(file.getName(), "UTF-8"));
+        httpHeaders.add("Content-Disposition", "attachment; filename=" + URLEncoder.encode(file.getName(), "UTF-8"));
         httpHeaders.add("Pragma", "no-cache");
         httpHeaders.add("Expires", "0");
         httpHeaders.add("Last-Modified", new Date().toString());
