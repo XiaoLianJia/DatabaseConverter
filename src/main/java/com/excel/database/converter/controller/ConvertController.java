@@ -16,6 +16,9 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 /**
@@ -93,14 +96,14 @@ public class ConvertController {
         return export(database);
     }
 
-    private ResponseEntity<FileSystemResource> export(File file) {
+    private ResponseEntity<FileSystemResource> export(File file) throws UnsupportedEncodingException {
         if (null == file) {
             return null;
         }
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Cache-Control", "no-cache, no-store, must-revalidate");
-        httpHeaders.add("Content-Disposition", "attachment; filename=" + file.getName());
+        httpHeaders.add("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(file.getName(), "UTF-8"));
         httpHeaders.add("Pragma", "no-cache");
         httpHeaders.add("Expires", "0");
         httpHeaders.add("Last-Modified", new Date().toString());
