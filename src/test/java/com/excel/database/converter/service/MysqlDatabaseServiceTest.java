@@ -104,20 +104,16 @@ public class MysqlDatabaseServiceTest {
             data.put(1, "数据2");
             data.put(2, "数据3");
 
-            boolean result = databaseService.insert(databaseUrl, tableName, fields, data);
-            System.out.println(String.format("插入数据表%s。", result ? "成功" : "失败"));
-
-            result = databaseService.insert(databaseUrl, tableName2, fields, data);
+            boolean result = databaseService.insert(databaseUrl, tableName, fields, data)
+                    && databaseService.insert(databaseUrl, tableName2, fields, data);
             System.out.println(String.format("插入数据表%s。", result ? "成功" : "失败"));
 
             result = databaseExportService.exportDatabaseStructure(databaseUrl, databaseName, sqlFilePath);
             System.out.println(String.format("导出数据库结构%s。", result ? "成功" : "失败"));
 
             if (result) {
-                result = databaseService.dropTable(databaseUrl, tableName);
-                System.out.println(String.format("删除数据表%s。", result ? "成功" : "失败"));
-
-                result = databaseService.dropTable(databaseUrl, tableName2);
+                result = databaseService.dropTable(databaseUrl, tableName)
+                        && databaseService.dropTable(databaseUrl, tableName2);
                 System.out.println(String.format("删除数据表%s。", result ? "成功" : "失败"));
             }
         }
@@ -140,20 +136,16 @@ public class MysqlDatabaseServiceTest {
             data.put(1, "数据2");
             data.put(2, "数据3");
 
-            boolean result = databaseService.insert(databaseUrl, tableName, fields, data);
-            System.out.println(String.format("插入数据表%s。", result ? "成功" : "失败"));
-
-            result = databaseService.insert(databaseUrl, tableName2, fields, data);
+            boolean result = databaseService.insert(databaseUrl, tableName, fields, data)
+                    && databaseService.insert(databaseUrl, tableName2, fields, data);
             System.out.println(String.format("插入数据表%s。", result ? "成功" : "失败"));
 
             result = databaseExportService.exportDatabaseStructureAndData(databaseUrl, databaseName, sqlFilePath);
             System.out.println(String.format("导出数据库结构和数据%s。", result ? "成功" : "失败"));
 
             if (result) {
-                result = databaseService.dropTable(databaseUrl, tableName);
-                System.out.println(String.format("删除数据表%s。", result ? "成功" : "失败"));
-
-                result = databaseService.dropTable(databaseUrl, tableName2);
+                result = databaseService.dropTable(databaseUrl, tableName)
+                        && databaseService.dropTable(databaseUrl, tableName2);
                 System.out.println(String.format("删除数据表%s。", result ? "成功" : "失败"));
             }
         }
@@ -176,20 +168,16 @@ public class MysqlDatabaseServiceTest {
             data.put(1, "数据2");
             data.put(2, "数据3");
 
-            boolean result = databaseService.insert(databaseUrl, tableName, fields, data);
-            System.out.println(String.format("插入数据表%s。", result ? "成功" : "失败"));
-
-            result = databaseService.insert(databaseUrl, tableName2, fields, data);
+            boolean result = databaseService.insert(databaseUrl, tableName, fields, data)
+                    && databaseService.insert(databaseUrl, tableName2, fields, data);
             System.out.println(String.format("插入数据表%s。", result ? "成功" : "失败"));
 
             result = databaseExportService.exportTableStructure(databaseUrl, tableName, sqlFilePath);
             System.out.println(String.format("导出数据表结构%s。", result ? "成功" : "失败"));
 
             if (result) {
-                result = databaseService.dropTable(databaseUrl, tableName);
-                System.out.println(String.format("删除数据表%s。", result ? "成功" : "失败"));
-
-                result = databaseService.dropTable(databaseUrl, tableName2);
+                result = databaseService.dropTable(databaseUrl, tableName)
+                        && databaseService.dropTable(databaseUrl, tableName2);
                 System.out.println(String.format("删除数据表%s。", result ? "成功" : "失败"));
             }
         }
@@ -212,20 +200,16 @@ public class MysqlDatabaseServiceTest {
             data.put(1, "数据2");
             data.put(2, "数据3");
 
-            boolean result = databaseService.insert(databaseUrl, tableName, fields, data);
-            System.out.println(String.format("插入数据表%s。", result ? "成功" : "失败"));
-
-            result = databaseService.insert(databaseUrl, tableName2, fields, data);
+            boolean result = databaseService.insert(databaseUrl, tableName, fields, data)
+                    && databaseService.insert(databaseUrl, tableName2, fields, data);
             System.out.println(String.format("插入数据表%s。", result ? "成功" : "失败"));
 
             result = databaseExportService.exportTableStructureAndData(databaseUrl, tableName, sqlFilePath);
             System.out.println(String.format("导出数据表结构和数据%s。", result ? "成功" : "失败"));
 
             if (result) {
-                result = databaseService.dropTable(databaseUrl, tableName);
-                System.out.println(String.format("删除数据表%s。", result ? "成功" : "失败"));
-
-                result = databaseService.dropTable(databaseUrl, tableName2);
+                result = databaseService.dropTable(databaseUrl, tableName)
+                        && databaseService.dropTable(databaseUrl, tableName2);
                 System.out.println(String.format("删除数据表%s。", result ? "成功" : "失败"));
             }
         }
