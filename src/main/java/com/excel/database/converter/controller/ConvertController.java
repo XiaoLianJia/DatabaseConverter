@@ -68,7 +68,7 @@ public class ConvertController {
 
     @PostMapping("excel_to_mysql")
     @ResponseBody
-    public ResponseEntity<FileSystemResource> excelToMysql(@NotNull MultipartFile file) throws IOException {
+    public ResponseEntity<FileSystemResource> excelToMysql(@NotNull MultipartFile file) throws Exception {
         log.info("Excel：{}。", file.getOriginalFilename());
         String fileName = file.getOriginalFilename();
         if (null == fileName) {

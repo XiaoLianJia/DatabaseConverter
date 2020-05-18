@@ -3,6 +3,7 @@ package com.excel.database.converter.service.impl;
 import com.alibaba.excel.EasyExcel;
 import com.excel.database.converter.listener.ExcelReadListener;
 import com.excel.database.converter.listener.ExcelToDatabaseListener;
+import com.excel.database.converter.service.IDatabaseExportService;
 import com.excel.database.converter.service.IDatabaseService;
 import com.excel.database.converter.service.IExcelService;
 import org.jetbrains.annotations.NotNull;
@@ -31,6 +32,10 @@ public class ExcelServiceImpl implements IExcelService {
     @Qualifier("Mysql")
     private IDatabaseService mysqlDatabaseService;
 
+    @Resource
+    @Qualifier("Mysql")
+    private IDatabaseExportService mysqlDatabaseExportService;
+
     @Override
     public void read(@NotNull InputStream excel) {
         EasyExcel.read(excel, new ExcelReadListener()).sheet().doRead();
@@ -52,7 +57,7 @@ public class ExcelServiceImpl implements IExcelService {
     }
 
     @Override
-    public void convertToMysql(InputStream excel, @NotNull File database) {
+    public void convertToMysql(InputStream excel, @NotNull File database) throws Exception {
         String searchFor = ".";
         String databaseName = database.getName().substring(0, database.getName().indexOf(searchFor));
 
@@ -64,5 +69,8 @@ public class ExcelServiceImpl implements IExcelService {
         // 数据表名赋值。
         listener.setTableName(databaseName);
         EasyExcel.read(excel, listener).sheet().doRead();
+
+        // 导出SQL文件。
+        mysqlDatabaseExportService.exportDatabaseStructureAndData(listener.getDatabaseUrl(), databaseName, database.getPath());
     }
 }

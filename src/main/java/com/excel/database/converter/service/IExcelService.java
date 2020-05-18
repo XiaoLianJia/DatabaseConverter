@@ -30,5 +30,5 @@ public interface IExcelService {
      * @param excel Excel
      * @param database MySQL
      */
-    void convertToMysql(InputStream excel, File database);
+    void convertToMysql(InputStream excel, File database) throws Exception;
 }

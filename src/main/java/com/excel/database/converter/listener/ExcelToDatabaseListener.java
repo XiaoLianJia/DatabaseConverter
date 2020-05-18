@@ -43,6 +43,8 @@ public class ExcelToDatabaseListener extends AnalysisEventListener<Map<Integer, 
     /**
      * 转存数据库地址。
      */
+    @Getter
+    @Setter
     private String databaseUrl;
 
     /**
