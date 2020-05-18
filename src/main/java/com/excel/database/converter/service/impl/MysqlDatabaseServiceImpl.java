@@ -152,7 +152,25 @@ public class MysqlDatabaseServiceImpl implements IDatabaseService, IDatabaseExpo
 
     @Override
     public boolean exportDatabaseStructure(String databaseUrl, String databaseName, String sqlFilePath) throws Exception {
-        return false;
+        try (Connection connection = DriverManager.getConnection(databaseUrl, username, password);
+             BufferedWriter writer = new BufferedWriter(new FileWriter(sqlFilePath))) {
+            // 写入文件头。
+            writeExportFileHead(writer);
+
+            // 遍历数据表。
+            try (Statement statement = connection.createStatement();
+                 ResultSet resultSet = statement.executeQuery(String.format("SHOW FULL TABLES FROM `%s` WHERE TABLE_TYPE = 'BASE TABLE'", databaseName))) {
+                while (resultSet.next()) {
+                    String tableName = resultSet.getString(1);
+                    // 导出表结构。
+                    exportTableStruct(connection, writer, tableName);
+                }
+            }
+
+            // 写入文件尾。
+            writeExportFileTail(writer);
+        }
+        return true;
     }
 
     @Override
@@ -162,42 +180,19 @@ public class MysqlDatabaseServiceImpl implements IDatabaseService, IDatabaseExpo
             // 写入文件头。
             writeExportFileHead(writer);
 
+            // 遍历数据表。
             try (Statement statement = connection.createStatement();
                  ResultSet resultSet = statement.executeQuery(String.format("SHOW FULL TABLES FROM `%s` WHERE TABLE_TYPE = 'BASE TABLE'", databaseName))) {
                 while (resultSet.next()) {
                     String tableName = resultSet.getString(1);
+                    // 导出表结构。
                     exportTableStruct(connection, writer, tableName);
+                    // 导出表数据。
                     exportTableData(connection, writer, tableName);
                 }
             }
 
-            try (Statement statement = connection.createStatement();
-                 ResultSet resultSet = statement.executeQuery(
-                         String.format("SELECT `SPECIFIC_NAME` from `INFORMATION_SCHEMA`.`ROUTINES` WHERE `ROUTINE_SCHEMA` = '%s' AND ROUTINE_TYPE = 'PROCEDURE'; ", databaseName))) {
-                while (resultSet.next()) {
-                    String processName = resultSet.getString(1);
-
-                    try (Statement statement1 = connection.createStatement();
-                         ResultSet resultSet1 = statement1.executeQuery(String.format("SHOW CREATE PROCEDURE `%s`", processName))) {
-                        if (! resultSet1.next()) {
-                            continue;
-                        }
-
-                        writer.newLine();
-                        writer.newLine();
-                        writer.write(String.format("/* Procedure structure for procedure `%s` */", processName));
-                        writer.newLine();
-                        writer.write(String.format("/*!50003 DROP PROCEDURE IF EXISTS  `%s` */;", processName));
-                        writer.newLine();
-                        writer.write("DELIMITER $$");
-                        writer.newLine();
-                        writer.append("/*!50003 ").append(resultSet1.getString(3)).append(" */$$");
-                        writer.newLine();
-                        writer.write("DELIMITER ;");
-                    }
-                }
-            }
-
+            // 写入文件尾。
             writeExportFileTail(writer);
         }
         return true;
@@ -205,37 +200,69 @@ public class MysqlDatabaseServiceImpl implements IDatabaseService, IDatabaseExpo
 
     @Override
     public boolean exportTableStructure(String databaseUrl, String tableName, String sqlFilePath) throws Exception {
-        return false;
+        try (Connection connection = DriverManager.getConnection(databaseUrl, username, password);
+             BufferedWriter writer = new BufferedWriter(new FileWriter(sqlFilePath))) {
+            // 写入文件头。
+            writeExportFileHead(writer);
+            // 导出表结构。
+            exportTableStruct(connection, writer, tableName);
+            // 写入文件尾。
+            writeExportFileTail(writer);
+        }
+        return true;
     }
 
     @Override
     public boolean exportTableStructureAndData(String databaseUrl, String tableName, String sqlFilePath) throws Exception {
-        return false;
+        try (Connection connection = DriverManager.getConnection(databaseUrl, username, password);
+             BufferedWriter writer = new BufferedWriter(new FileWriter(sqlFilePath))) {
+            // 写入文件头。
+            writeExportFileHead(writer);
+            // 导出表结构。
+            exportTableStruct(connection, writer, tableName);
+            // 导出表数据。
+            exportTableData(connection, writer, tableName);
+            // 写入文件尾。
+            writeExportFileTail(writer);
+        }
+        return true;
     }
 
+    /**
+     * 导出表结构
+     * @param connection 连接
+     * @param writer 缓存写入器
+     * @param tableName 表名
+     * @throws Exception 异常
+     */
     private void exportTableStruct(Connection connection, BufferedWriter writer, String tableName) throws Exception {
         try (Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(String.format("SHOW CREATE TABLE `%s`", tableName))) {
-            if (!resultSet.next()) {
-                return;
+            if (resultSet.next()) {
+                writer.newLine();
+                writer.newLine();
+                writer.write("-- ----------------------------");
+                writer.newLine();
+                writer.write(String.format("-- Table structure for `%s`", tableName));
+                writer.newLine();
+                writer.write("-- ----------------------------");
+                writer.newLine();
+                writer.write(String.format("DROP TABLE IF EXISTS `%s`;", tableName));
+                writer.newLine();
+                writer.write(resultSet.getString(2) + ";");
+                writer.newLine();
+                writer.flush();
             }
-
-            writer.newLine();
-            writer.newLine();
-            writer.write("-- ----------------------------");
-            writer.newLine();
-            writer.write(String.format("-- Table structure for `%s`", tableName));
-            writer.newLine();
-            writer.write("-- ----------------------------");
-            writer.newLine();
-            writer.write(String.format("DROP TABLE IF EXISTS `%s`;", tableName));
-            writer.newLine();
-            writer.write(resultSet.getString(2) + ";");
-            writer.newLine();
-            writer.flush();
         }
     }
 
+    /**
+     * 导出表数据
+     * @param connection 连接
+     * @param writer 缓存写入器
+     * @param tableName 表名
+     * @throws Exception 异常
+     */
     private void exportTableData(Connection connection, BufferedWriter writer, String tableName) throws Exception {
         try (Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(String.format("SELECT COUNT(1) FROM `%s`", tableName))) {
@@ -257,24 +284,68 @@ public class MysqlDatabaseServiceImpl implements IDatabaseService, IDatabaseExpo
             statement.setFetchDirection(ResultSet.FETCH_REVERSE);
             try (ResultSet resultSet = statement.executeQuery(String.format("SELECT * FROM `%s`", tableName))) {
                 while (resultSet.next()) {
-                    int colCount = resultSet.getMetaData().getColumnCount();
                     writer.write(String.format("INSERT INTO `%s` VALUES (", tableName));
 
-                    for (int j = 0; j < colCount; j ++) {
+                    int columnCount = resultSet.getMetaData().getColumnCount();
+                    for (int j = 0; j < columnCount; j ++) {
                         if (j > 0) {
                             writer.write(',');
                         }
-                        Object colValue = resultSet.getObject(j + 1);
-                        if(null != colValue) {
-                            writer.write(String.format("'%s'", escapeString(colValue.toString())));
-                        } else {
-                            writer.write("NULL");
-                        }
+                        Object columnValue = resultSet.getObject(j + 1);
+                        writer.write(null != columnValue ? String.format("'%s'", escapeString(columnValue.toString())) : "NULL");
                     }
                     writer.write(");");
                     writer.newLine();
                     writer.flush();
                 }
+            }
+        }
+    }
+
+    /**
+     * 导出例行程序
+     * @param connection 连接
+     * @param writer 缓存写入器
+     * @param databaseName 库名
+     * @throws Exception 异常
+     */
+    private void exportRoutines(Connection connection, BufferedWriter writer, String databaseName) throws Exception {
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(String.format("SELECT `SPECIFIC_NAME` from `INFORMATION_SCHEMA`.`ROUTINES` " +
+                     "WHERE `ROUTINE_SCHEMA` = '%s' AND ROUTINE_TYPE = 'PROCEDURE'; ", databaseName))) {
+            while (resultSet.next()) {
+                String procedureName = resultSet.getString(1);
+                exportProcedure(connection, writer, procedureName);
+            }
+        }
+    }
+
+    /**
+     * 导出存储过程
+     * @param connection 连接
+     * @param writer 缓存写入器
+     * @param procedureName 存储过程名称
+     * @throws Exception 异常
+     */
+    private void exportProcedure(Connection connection, BufferedWriter writer, String procedureName) throws Exception {
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(String.format("SHOW CREATE PROCEDURE `%s`", procedureName))) {
+            if (resultSet.next()) {
+                writer.newLine();
+                writer.newLine();
+                writer.write("-- ----------------------------");
+                writer.newLine();
+                writer.write(String.format("-- Procedure structure for procedure `%s`", procedureName));
+                writer.newLine();
+                writer.write("-- ----------------------------");
+                writer.newLine();
+                writer.write(String.format("/*!50003 DROP PROCEDURE IF EXISTS `%s`*/;", procedureName));
+                writer.newLine();
+                writer.write("DELIMITER $$");
+                writer.newLine();
+                writer.append("/*!50003 ").append(resultSet.getString(3)).append(" */$$");
+                writer.newLine();
+                writer.write("DELIMITER ;");
             }
         }
     }
@@ -317,118 +388,60 @@ public class MysqlDatabaseServiceImpl implements IDatabaseService, IDatabaseExpo
         writer.flush();
     }
 
+    /**
+     * 字符转义
+     * @param source 源字符串
+     * @return 转义后字符串
+     */
+    private String escapeString(String source) {
+        if (StringUtils.isEmpty(source)) {
+            return source;
+        }
 
-    public static String escapeString(String x) {
-        if(StringUtils.isEmpty(x)) {
-            return x;
-        }
-        if(!isNeedEscape(x)) {
-            return x;
-        }
-        int stringLength = x.length();
-        String parameterAsString = x;
-        StringBuffer buf = new StringBuffer((int)((double)x.length() * 1.1000000000000001D));
-        // 可以指定结果前后追加单引号：'
-        //buf.append('\'');
-        for(int i = 0; i < stringLength; i++)
-        {
-            char c = x.charAt(i);
-            switch(c)
-            {
+        StringBuilder stringBuilder = new StringBuilder((int)((double) source.length() * 1.1000000000000001D));
+        for (int i = 0; i < source.length(); i++) {
+            char character = source.charAt(i);
+            switch(character) {
+                case 0:
+                    // '\0'
+                    stringBuilder.append('\\');
+                    stringBuilder.append('0');
+                    continue;
+                case 10:
+                    // '\n'
+                    stringBuilder.append('\\');
+                    stringBuilder.append('n');
+                    continue;
+                case 13:
+                    // '\r'
+                    stringBuilder.append('\\');
+                    stringBuilder.append('r');
+                    continue;
+                case 92:
+                    // '\\'
+                    stringBuilder.append('\\');
+                    stringBuilder.append('\\');
+                    continue;
+                case 39:
+                    // '\''
+                    stringBuilder.append('\\');
+                    stringBuilder.append('\'');
+                    continue;
+                case 34:
+                    // '"'
+                    stringBuilder.append('\\');
+                    stringBuilder.append('"');
+                    continue;
+                case 26:
+                    // '\032'
+                    stringBuilder.append('\\');
+                    stringBuilder.append('Z');
+                    continue;
                 default:
                     break;
-
-                case 0: // '\0'
-                    buf.append('\\');
-                    buf.append('0');
-                    continue;
-
-                case 10: // '\n'
-                    buf.append('\\');
-                    buf.append('n');
-                    continue;
-
-                case 13: // '\r'
-                    buf.append('\\');
-                    buf.append('r');
-                    continue;
-
-                case 92: // '\\'
-                    buf.append('\\');
-                    buf.append('\\');
-                    continue;
-
-                case 39: // '\''
-                    buf.append('\\');
-                    buf.append('\'');
-                    continue;
-
-                case 34: // '"'
-                    buf.append('\\');
-                    buf.append('"');
-                    continue;
-
-                case 26: // '\032'
-                    buf.append('\\');
-                    buf.append('Z');
-                    continue;
-
             }
-            buf.append(c);
+            stringBuilder.append(character);
         }
-        // 可以指定结果前后追加单引号：'
-        //buf.append('\'');
-        parameterAsString = buf.toString();
-        return parameterAsString;
-    }
-
-    public static boolean isNeedEscape(String x) {
-        boolean needsHexEscape = false;
-        if(StringUtils.isEmpty(x)) {
-            return needsHexEscape;
-        }
-        int stringLength = x.length();
-        int i = 0;
-        do
-        {
-            if(i >= stringLength) {
-                break;
-            }
-            char c = x.charAt(i);
-            switch(c)
-            {
-                case 0: // '\0'
-                    needsHexEscape = true;
-                    break;
-
-                case 10: // '\n'
-                    needsHexEscape = true;
-                    break;
-
-                case 13: // '\r'
-                    needsHexEscape = true;
-                    break;
-
-                case 92: // '\\'
-                    needsHexEscape = true;
-                    break;
-
-                case 39: // '\''
-                    needsHexEscape = true;
-                    break;
-
-                case 34: // '"'
-                    needsHexEscape = true;
-                    break;
-
-                case 26: // '\032'
-                    needsHexEscape = true;
-                    break;
-            }
-            if(needsHexEscape)
-                break;
-            i++;
-        } while(true);
-        return needsHexEscape;
+        return stringBuilder.toString();
     }
 }
