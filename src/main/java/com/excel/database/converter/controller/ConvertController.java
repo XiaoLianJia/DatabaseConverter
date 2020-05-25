@@ -95,6 +95,25 @@ public class ConvertController {
         return export(database);
     }
 
+    @PostMapping("excel_to_mysql/save")
+    @ResponseBody
+    public String saveExcelToMysql(@NotNull MultipartFile file) throws Exception {
+        log.info("Excel：{}。", file.getOriginalFilename());
+        String fileName = file.getOriginalFilename();
+        if (null == fileName) {
+            log.error("文件名为空。");
+            return null;
+        }
+
+        String searchFor = ".";
+        if (-1 != fileName.lastIndexOf(searchFor)) {
+            fileName = fileName.substring(0, fileName.lastIndexOf(searchFor));
+        }
+        excelService.saveToMysql(file.getInputStream(), fileName);
+        log.info("MySQL：{}。", fileName);
+        return "Success";
+    }
+
     private ResponseEntity<FileSystemResource> export(File file) throws UnsupportedEncodingException {
         if (null == file) {
             return null;

@@ -32,4 +32,11 @@ public interface IExcelService {
      * @throws Exception 异常
      */
     void convertToMysql(InputStream excel, File database) throws Exception;
+
+    /**
+     * Excel转储到MySQL
+     * @param excel Excel
+     * @param databaseName MySQL库名
+     */
+    void saveToMysql(InputStream excel, String databaseName);
 }

@@ -75,4 +75,16 @@ public class ExcelServiceImpl implements IExcelService {
         // 导出完成后删除数据库。
         mysqlDatabaseService.dropDatabase(listener.getDatabaseUrl(), databaseName);
     }
+
+    @Override
+    public void saveToMysql(InputStream excel, String databaseName) {
+        ExcelToDatabaseListener listener = new ExcelToDatabaseListener(mysqlDatabaseService);
+        // 数据库名赋值。
+        listener.setDatabase(databaseName);
+        // 数据库名赋值。
+        listener.setDatabaseName(databaseName);
+        // 数据表名赋值。
+        listener.setTableName(databaseName);
+        EasyExcel.read(excel, listener).sheet().doRead();
+    }
 }
