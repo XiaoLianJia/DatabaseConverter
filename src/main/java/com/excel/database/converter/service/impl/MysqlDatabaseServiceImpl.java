@@ -148,7 +148,14 @@ public class MysqlDatabaseServiceImpl implements IDatabaseService, IDatabaseExpo
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             for (Map<Integer, String> data : list) {
                 for (Map.Entry<Integer, String> entry : data.entrySet()) {
-                    preparedStatement.setString(entry.getKey() + 1, entry.getValue());
+                    String value = entry.getValue();
+                    if (null != value
+                            && value.length() > 255) {
+                        log.warn("数据长度超限，{}:{}。", entry.getKey(), value);
+                        value = value.substring(0, 254);
+                        log.warn("数据截取，{}:{}。", entry.getKey(), value);
+                    }
+                    preparedStatement.setString(entry.getKey() + 1, value);
                 }
                 preparedStatement.executeUpdate();
             }
