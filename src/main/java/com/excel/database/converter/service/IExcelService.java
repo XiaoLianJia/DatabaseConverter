@@ -39,4 +39,12 @@ public interface IExcelService {
      * @param databaseName MySQL库名
      */
     void saveToMysql(InputStream excel, String databaseName);
+
+    /**
+     * Excel转储到MySQL
+     * @param excel Excel
+     * @param databaseName MySQL库名
+     * @param tableName MySQL表名
+     */
+    void saveToMysql(InputStream excel, String databaseName, String tableName);
 }

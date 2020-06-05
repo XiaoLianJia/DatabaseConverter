@@ -87,4 +87,16 @@ public class ExcelServiceImpl implements IExcelService {
         listener.setTableName(databaseName);
         EasyExcel.read(excel, listener).sheet().doRead();
     }
+
+    @Override
+    public void saveToMysql(InputStream excel, String databaseName, String tableName) {
+        ExcelToDatabaseListener listener = new ExcelToDatabaseListener(mysqlDatabaseService);
+        // 数据库名赋值。
+        listener.setDatabase(databaseName);
+        // 数据库名赋值。
+        listener.setDatabaseName(databaseName);
+        // 数据表名赋值。
+        listener.setTableName(tableName);
+        EasyExcel.read(excel, listener).sheet().doRead();
+    }
 }

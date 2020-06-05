@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -109,8 +110,20 @@ public class ConvertController {
         if (-1 != fileName.lastIndexOf(searchFor)) {
             fileName = fileName.substring(0, fileName.lastIndexOf(searchFor));
         }
+
+        log.info("Save to MySQL：`{}`.`{}`。", fileName, fileName);
         excelService.saveToMysql(file.getInputStream(), fileName);
-        log.info("MySQL：{}。", fileName);
+        return "Success";
+    }
+
+    @PostMapping("excel_to_mysql/save_with_db_param")
+    @ResponseBody
+    public String saveExcelToMysql(@NotNull MultipartFile file,
+                                   @RequestParam("databaseName") String databaseName,
+                                   @RequestParam("tableName") String tableName) throws Exception {
+        log.info("Excel：{}。", file.getOriginalFilename());
+        log.info("Save to MySQL：`{}`.`{}`。", databaseName, tableName);
+        excelService.saveToMysql(file.getInputStream(), databaseName, tableName);
         return "Success";
     }
 
