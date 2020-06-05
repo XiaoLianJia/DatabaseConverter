@@ -33,8 +33,8 @@ public class QueryController {
     @PostMapping("mysql")
     @ResponseBody
     public String queryFromMysql(@RequestParam("databaseName") String databaseName,
-                                   @RequestParam("tableName") String tableName,
-                                   @RequestParam("select") String sqlForSelect) throws Exception {
+                                 @RequestParam("tableName") String tableName,
+                                 @RequestParam("select") String sqlForSelect) throws Exception {
         log.info("Query from MySQL：`{}`.`{}`。", databaseName, tableName);
         log.info("SELECT: {}。", sqlForSelect);
 
