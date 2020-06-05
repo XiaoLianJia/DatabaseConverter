@@ -4,7 +4,7 @@
     <springProperty scop="context" name="spring.application.name" source="spring.application.name"/>
 
     <!-- 定义日志存储的路径，不要配置相对路径 -->
-    <property name="LOG_PATH" value="/logs" />
+    <property name="LOG_PATH" value="/home/logs/${spring.application.name}" />
 
     <!-- 格式化输出
     %date：日期，
