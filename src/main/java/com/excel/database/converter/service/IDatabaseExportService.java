@@ -1,5 +1,8 @@
 package com.excel.database.converter.service;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * <p>
  *     数据库导出服务接口类
@@ -48,4 +51,14 @@ public interface IDatabaseExportService {
      * @throws Exception 异常
      */
     boolean exportTableStructureAndData(String databaseUrl, String tableName, String sqlFilePath) throws Exception;
+
+    /**
+     * 导出数据表部分数据
+     * @param databaseUrl 数据库URL
+     * @param tableName 表名
+     * @param sqlForSelect 查询SQL语句
+     * @return 查询结果
+     * @throws Exception 异常
+     */
+    List<Map<String, String>> exportTableData(String databaseUrl, String tableName, String sqlForSelect) throws Exception;
 }

@@ -1,5 +1,6 @@
 package com.excel.database.converter.service;
 
+import com.alibaba.fastjson.JSON;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -9,6 +10,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import javax.annotation.Resource;
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -225,6 +227,39 @@ public class MysqlDatabaseServiceTest {
             if (result) {
                 result = databaseService.dropTable(databaseUrl, tableName)
                         && databaseService.dropTable(databaseUrl, tableName2);
+                System.out.println(String.format("删除数据表%s。", result ? "成功" : "失败"));
+
+                result = databaseService.dropDatabase(databaseUrl, databaseName);
+                System.out.println(String.format("删除数据库%s。", result ? "成功" : "失败"));
+            }
+        }
+    }
+
+    @Test
+    public void exportData() throws Exception {
+        String databaseUrl = databaseService.createDatabase(databaseName);
+        System.out.println(databaseUrl);
+
+        Map<Integer, String> fields = new HashMap<>(4);
+        fields.put(1, "字段1");
+        fields.put(2, "字段2");
+        fields.put(3, "字段3");
+
+        if (databaseService.crateTable(databaseUrl, tableName, fields)) {
+            Map<Integer, String> data = new HashMap<>(4);
+            data.put(0, "数据1");
+            data.put(1, "数据2");
+            data.put(2, "数据3");
+
+            boolean result = databaseService.insert(databaseUrl, tableName, fields, data);
+            System.out.println(String.format("插入数据表%s。", result ? "成功" : "失败"));
+
+            String sqlForSelect = String.format("SELECT * FROM `%s`", tableName);
+            List<Map<String, String>> exportData = databaseExportService.exportTableData(databaseUrl, tableName, sqlForSelect);
+            System.out.println(String.format("导出数据表数据: %s。", JSON.toJSONString(exportData)));
+
+            if (result) {
+                result = databaseService.dropTable(databaseUrl, tableName);
                 System.out.println(String.format("删除数据表%s。", result ? "成功" : "失败"));
 
                 result = databaseService.dropDatabase(databaseUrl, databaseName);

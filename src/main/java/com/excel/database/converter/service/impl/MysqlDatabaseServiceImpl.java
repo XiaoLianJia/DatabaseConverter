@@ -12,6 +12,8 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -239,6 +241,36 @@ public class MysqlDatabaseServiceImpl implements IDatabaseService, IDatabaseExpo
             writeExportFileTail(writer);
         }
         return true;
+    }
+
+    @Override
+    public List<Map<String, String>> exportTableData(@NotNull String databaseUrl, String tableName, String sqlForSelect) throws Exception {
+        try (Connection connection = DriverManager.getConnection(databaseUrl, username, password);
+             Statement statement = connection.createStatement()) {
+
+            String databaseName = databaseUrl.substring(databaseUrl.lastIndexOf("/") + 1, databaseUrl.indexOf("?"));
+            String sql = String.format("SELECT `column_name` FROM `information_schema`.COLUMNS WHERE `table_schema` = '%s' AND `table_name` = '%s'",
+                    databaseName, tableName);
+
+            Map<Integer, String> column = new HashMap<>(8);
+            ResultSet resultSet = statement.executeQuery(sql);
+            while (resultSet.next()) {
+                String columnName = resultSet.getString(1);
+                column.put(column.size() + 1, columnName);
+            }
+
+            List<Map<String, String>> dataList = new ArrayList<>();
+            resultSet = statement.executeQuery(sqlForSelect);
+            while (resultSet.next()) {
+                Map<String, String> dataMap = new HashMap<>(8);
+                for (Map.Entry<Integer, String> entry : column.entrySet()) {
+                    String value = resultSet.getString(entry.getValue());
+                    dataMap.put(entry.getValue(), value);
+                }
+                dataList.add(dataMap);
+            }
+            return dataList;
+        }
     }
 
     /**
