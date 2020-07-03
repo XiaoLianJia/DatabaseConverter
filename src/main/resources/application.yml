@@ -7,6 +7,11 @@ spring:
     #应用相关配置
     application:
         name: ${project.name}
+    #Servlet相关配置
+    servlet:
+        multipart:
+            max-file-size: 100MB
+            max-request-size: 1000MB
 
 datasource:
     mysql:
