@@ -151,8 +151,10 @@ public class MysqlDatabaseServiceImpl implements IDatabaseService, IDatabaseExpo
             for (Map<Integer, String> data : list) {
                 for (Map.Entry<Integer, String> entry : data.entrySet()) {
                     String value = entry.getValue();
-                    if (null != value
-                            && value.length() > 255) {
+                    if (null == value) {
+                        value = "";
+                    }
+                    if (value.length() > 255) {
                         log.warn("数据长度超限，{}:{}。", entry.getKey(), value);
                         value = value.substring(0, 254);
                         log.warn("数据截取，{}:{}。", entry.getKey(), value);

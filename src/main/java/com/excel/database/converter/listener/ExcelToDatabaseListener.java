@@ -94,13 +94,27 @@ public class ExcelToDatabaseListener extends AnalysisEventListener<Map<Integer, 
             }
         } catch (Exception e) {
             log.error("创建数据库/表失败，库：{}，表：{}。", databaseName, tableName);
-            log.error(e.getMessage());
+            log.error(e.getMessage(), e);
         }
     }
 
     @Override
     public void invoke(Map<Integer, String> integerStringMap, AnalysisContext analysisContext) {
         log.info("解析到一条数据：{}。", JSON.toJSONString(integerStringMap));
+        if (integerStringMap.size() < tableFields.size()) {
+            log.warn("数据字段数量={}，少于表头数量={}。", integerStringMap.size(), tableFields.size());
+            for (int i = integerStringMap.size(); i < tableFields.size(); i++) {
+                integerStringMap.put(i, "");
+            }
+        }
+
+        for (Integer key : integerStringMap.keySet()) {
+            if (null == integerStringMap.get(key)) {
+                log.warn("第{}列数据为空。", key + 1);
+                integerStringMap.putIfAbsent(key, "");
+            }
+        }
+
         list.add(integerStringMap);
         if (list.size() >= BATCH_COUNT) {
             saveData();
@@ -131,7 +145,7 @@ public class ExcelToDatabaseListener extends AnalysisEventListener<Map<Integer, 
             }
         } catch (Exception e) {
             log.error("插入数据失败，库：{}， 表：{}。", databaseName, tableName);
-            log.error(e.getMessage());
+            log.error(e.getMessage(), e);
         }
     }
 }
