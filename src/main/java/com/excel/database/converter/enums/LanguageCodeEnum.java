@@ -1,6 +1,7 @@
 package com.excel.database.converter.enums;
 
 import lombok.Getter;
+import org.jetbrains.annotations.Contract;
 
 /**
  * <p>
@@ -27,10 +28,11 @@ public enum LanguageCodeEnum {
      */
     ENGLISH("en", "English");
 
-    private String code;
+    private final String code;
 
-    private String language;
+    private final String language;
 
+    @Contract(pure = true)
     LanguageCodeEnum(String code, String language) {
         this.code = code;
         this.language = language;

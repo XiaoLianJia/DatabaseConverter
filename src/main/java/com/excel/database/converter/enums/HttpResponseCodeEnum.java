@@ -1,6 +1,7 @@
 package com.excel.database.converter.enums;
 
 import lombok.Getter;
+import org.jetbrains.annotations.Contract;
 
 /**
  * <p>
@@ -67,10 +68,11 @@ public enum HttpResponseCodeEnum {
 	 */
 	ERROR_SYSTEM("9999", "系统错误");
 
-	private String code;
+	private final String code;
 
-	private String msg;
+	private final String msg;
 
+	@Contract(pure = true)
 	HttpResponseCodeEnum(String code, String msg) {
 		this.code = code;
 		this.msg = msg;
