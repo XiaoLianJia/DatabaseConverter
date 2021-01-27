@@ -1,16 +1,13 @@
 package com.excel.database.converter.http;
 
 import com.excel.database.converter.enums.HttpResponseCodeEnum;
-import com.github.pagehelper.PageInfo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.data.domain.Page;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * <p>
@@ -77,35 +74,5 @@ public final class HttpResponse<T> implements Serializable {
 	@Contract("_ -> new")
 	public static <T> HttpResponse<T> error(@NotNull HttpResponseCodeEnum error) {
 		return new HttpResponse<>(error.getCode(), error.getMsg());
-	}
-
-	@NotNull
-	@SuppressWarnings("unchecked")
-	public static <T> HttpResponse<T> pageSuccess(Page<T> page) {
-		if (null == page) {
-			return success();
-		}
-		HttpPageResponse<List<T>> pageResult = new HttpPageResponse<>();
-		pageResult.setData(page.getContent());
-		pageResult.setTotalPages(page.getTotalPages());
-		pageResult.setTotalElements(page.getTotalElements());
-		pageResult.setPageNumber(page.getNumber() + 1);
-		pageResult.setPageSize(page.getSize());
-		return (HttpResponse<T>) new HttpResponse<>(HttpResponseCodeEnum.SUCCESS.getCode(), HttpResponseCodeEnum.SUCCESS.getMsg(), pageResult);
-	}
-
-	@NotNull
-	@SuppressWarnings("unchecked")
-	public static <T> HttpResponse<T> pageSuccess(PageInfo<T> pageInfo) {
-		if (null == pageInfo) {
-			return success();
-		}
-		HttpPageResponse<List<T>> pageResult = new HttpPageResponse<>();
-		pageResult.setData(pageInfo.getList());
-		pageResult.setTotalPages(pageInfo.getPages());
-		pageResult.setTotalElements(pageInfo.getTotal());
-		pageResult.setPageNumber(pageInfo.getPageNum());
-		pageResult.setPageSize(pageInfo.getSize());
-		return (HttpResponse<T>) new HttpResponse<>(HttpResponseCodeEnum.SUCCESS.getCode(), HttpResponseCodeEnum.SUCCESS.getMsg(), pageResult);
 	}
 }
