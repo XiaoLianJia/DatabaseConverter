@@ -16,13 +16,13 @@
     <property name="LOG_PATTERN" value="%date{yyyy-MM-dd HH:mm:ss.SSS} | [%thread] | %-5level | [%logger{50}] | %file:%line | %msg%n" />
 
     <!-- 彩色日志格式 -->
-    <property name="CONSOLE_LOG_PATTERN"
+    <property name="COLORED_LOG_PATTERN"
               value="%date{HH:mm:ss} | %highlight(%-5level) | %boldYellow(%thread) | %msg | %boldGreen(%logger) %n"/>
 
     <!-- 控制台日志配置 -->
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <pattern>${COLORED_LOG_PATTERN}</pattern>
         </encoder>
     </appender>
 
@@ -32,8 +32,9 @@
             <fileNamePattern>${LOG_PATH}/info_%d{yyyy-MM-dd}.log.gz</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
-        <encoder>
-            <pattern>%date{HH:mm:ss} %-5level [%thread] [%logger{50}] - %msg%n</pattern>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${COLORED_LOG_PATTERN}</pattern>
+            <charset>utf-8</charset>
         </encoder>
     </appender>
 
@@ -43,8 +44,9 @@
             <fileNamePattern>${LOG_PATH}/error_%d{yyyy-MM-dd}.log.gz</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
-        <encoder>
-            <pattern>%date{HH:mm:ss} %-5level [%thread] [%logger{50}] %file:%line - %msg%n</pattern>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${COLORED_LOG_PATTERN}</pattern>
+            <charset>utf-8</charset>
         </encoder>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>ERROR</level>

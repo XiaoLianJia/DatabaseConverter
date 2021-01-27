@@ -33,12 +33,12 @@ public class ExcelToDatabaseListener extends AnalysisEventListener<Map<Integer, 
     /**
      * 临时数据存储区。
      */
-    private List<Map<Integer, String>> list = new ArrayList<>();
+    private final List<Map<Integer, String>> list = new ArrayList<>();
 
     /**
      * 数据库服务。
      */
-    private IDatabaseService databaseService;
+    private final IDatabaseService databaseService;
 
     /**
      * 转存数据库地址。

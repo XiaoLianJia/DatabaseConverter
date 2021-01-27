@@ -2,6 +2,7 @@ package com.excel.database.converter.controller;
 
 import com.excel.database.converter.service.IExcelService;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpHeaders;
@@ -127,6 +128,7 @@ public class ConvertController {
         return "Success";
     }
 
+    @Contract("null -> null")
     private ResponseEntity<FileSystemResource> export(File file) throws UnsupportedEncodingException {
         if (null == file) {
             return null;

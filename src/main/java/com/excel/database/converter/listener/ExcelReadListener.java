@@ -29,7 +29,7 @@ public class ExcelReadListener extends AnalysisEventListener<Map<Integer, String
     /**
      * 临时数据存储区。
      */
-    private List<Map<Integer, String>> list = new ArrayList<>();
+    private final List<Map<Integer, String>> list = new ArrayList<>();
 
     @Override
     public void invokeHeadMap(Map<Integer, String> headMap, AnalysisContext context) {
